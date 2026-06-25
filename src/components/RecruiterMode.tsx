@@ -111,7 +111,7 @@ export default function RecruiterMode() {
                       <h2 className="text-4xl md:text-5xl font-display font-extrabold text-white mb-2">Gaurav Tiwari</h2>
                       <p className="text-zinc-400 text-lg flex items-center justify-center gap-2">
                         <Code2 className="w-5 h-5 text-cyan-400" />
-                        Software Engineering Intern Candidate
+                        AI Engineer Intern Candidate
                       </p>
                     </div>
 
@@ -138,9 +138,9 @@ export default function RecruiterMode() {
                           Investment Thesis
                         </h3>
                         <p className="text-zinc-300 leading-relaxed text-[15px]">
-                          Gaurav presents an exceptional asymmetrical risk-to-reward ratio for the InsideIIM engineering team. He demonstrates a rare combination of robust frontend architecture skills (React, Next.js), deep understanding of modern UI/UX principles (Tailwind, Framer Motion), and the ability to integrate cutting-edge AI features seamlessly. 
+                          Gaurav presents an exceptional asymmetrical risk-to-reward ratio for the InsideIIM engineering team as an AI Engineer Intern. He demonstrates a rare combination of building complex Agentic AI architectures (LangChain/LLMs), strong prompt engineering, and the ability to weave these models into highly interactive, production-ready frontend experiences.
                           <br /><br />
-                          Unlike standard candidates, Gaurav builds with a product-owner mindset, prioritizing highly engaging user experiences, handling edge-cases (like API rate-limiting), and writing highly modular code. Initiating a STRONG HIRE position is highly recommended before market competitors acquire this asset.
+                          Unlike standard candidates, Gaurav builds with a product-owner mindset, prioritizing highly engaging user experiences, handling edge-cases like AI rate-limiting, and writing highly modular code. Initiating a STRONG HIRE position is highly recommended before market competitors acquire this asset.
                         </p>
                       </div>
                     </div>
