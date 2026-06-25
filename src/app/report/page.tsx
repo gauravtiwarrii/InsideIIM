@@ -860,12 +860,6 @@ function ReportPageContent() {
                           {id.recommendation}
                         </div>
                       </div>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-3xl font-bold text-white">
-                          {id.investmentScore}
-                        </span>
-                        <span className="text-zinc-500 text-sm">/ 100</span>
-                      </div>
                       <div className="mt-2">
                         <ConfidenceGauge
                           score={id.confidenceScore}

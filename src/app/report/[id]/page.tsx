@@ -741,12 +741,6 @@ function ReportPageContent({ params }: { params: Promise<{ id: string }> }) {
                       <div className={`text-5xl md:text-6xl font-extrabold ${verdictColor} ${verdictGlow} verdict-pulse`}>
                         {id.recommendation}
                       </div>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-3xl font-bold text-white">
-                          {id.investmentScore}
-                        </span>
-                        <span className="text-zinc-500 text-sm">/ 100</span>
-                      </div>
                       <div className="mt-2">
                         <ConfidenceGauge
                           score={id.confidenceScore}
