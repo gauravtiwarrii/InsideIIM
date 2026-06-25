@@ -41,11 +41,10 @@ export async function financialAgent(state: GraphState): Promise<Partial<GraphSt
         revenue: "N/A",
         netIncome: "N/A",
         eps: "0",
+        marketCap: "N/A",
         peRatio: "0",
         revenueGrowth: "0%",
         financialHealthScore: 50,
-        keyStrengths: ["Data temporarily unavailable due to API limits"],
-        keyWeaknesses: ["Data temporarily unavailable due to API limits"],
         citations: []
       },
       currentStep: "financial_complete"

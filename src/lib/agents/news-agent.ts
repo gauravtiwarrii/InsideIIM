@@ -28,9 +28,12 @@ export async function newsAgent(state: GraphState): Promise<Partial<GraphState>>
     console.error("News Agent Error:", error);
     return {
       newsData: {
-        sentimentSummary: "News sentiment is currently unavailable due to API rate limits.",
-        bullishPoints: ["Data temporarily unavailable"],
-        bearishPoints: ["Data temporarily unavailable"],
+        newsSummary: "News sentiment is currently unavailable due to API rate limits.",
+        productLaunches: [],
+        acquisitions: [],
+        lawsuits: [],
+        partnerships: [],
+        regulatoryIssues: [],
         newsSentimentScore: 50,
         citations: []
       },

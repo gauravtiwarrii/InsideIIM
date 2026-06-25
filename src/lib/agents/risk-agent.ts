@@ -28,9 +28,11 @@ export async function riskAgent(state: GraphState): Promise<Partial<GraphState>>
     console.error("Risk Agent Error:", error);
     return {
       riskData: {
-        riskProfile: "Risk profile is currently unavailable due to API rate limits.",
-        keyRisks: ["Data temporarily unavailable"],
-        mitigatingFactors: ["Data temporarily unavailable"],
+        competitionRisk: "Data temporarily unavailable due to API rate limits.",
+        regulatoryRisk: "Data temporarily unavailable due to API rate limits.",
+        debtRisk: "Data temporarily unavailable due to API rate limits.",
+        marketRisk: "Data temporarily unavailable due to API rate limits.",
+        businessModelRisk: "Data temporarily unavailable due to API rate limits.",
         riskScore: 50,
         citations: []
       },

@@ -37,9 +37,11 @@ export async function investmentAgent(state: GraphState): Promise<Partial<GraphS
         investmentScore: 50,
         confidenceScore: 50,
         holdingPeriod: "MEDIUM_TERM",
-        priceTarget: 0,
-        justification: "Due to temporary API rate limits, a complete investment recommendation cannot be generated at this time. Defaulting to a neutral HOLD.",
-        keyCatalysts: ["Awaiting API quota reset"]
+        targetPriceInsight: "Unable to calculate target price due to rate limits.",
+        reasoning: "Due to temporary API rate limits from the AI provider, a complete investment recommendation cannot be generated at this time. We are defaulting to a neutral HOLD. Please try again in a few moments.",
+        bullCase: ["Awaiting API quota reset to analyze bull case."],
+        bearCase: ["Awaiting API quota reset to analyze bear case."],
+        catalysts: ["Awaiting API quota reset to analyze catalysts."]
       },
       currentStep: "investment_complete"
     };
