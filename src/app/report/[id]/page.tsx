@@ -367,11 +367,11 @@ function ReportPageContent({ params }: { params: Promise<{ id: string }> }) {
       </div>
     `;
 
-    // Create a temporary container
-    const container = document.createElement("div");
-    container.style.cssText = "position:absolute;left:-9999px;top:0;width:700px;background:white;padding:40px;";
-    container.innerHTML = pdfContent;
-    document.body.appendChild(container);
+    const fullHtml = `
+      <div style="width:700px;background:white;padding:40px;box-sizing:border-box;">
+        ${pdfContent}
+      </div>
+    `;
 
     const opt = {
       margin: [0.5, 0.6, 0.5, 0.6] as [number, number, number, number],
@@ -382,8 +382,7 @@ function ReportPageContent({ params }: { params: Promise<{ id: string }> }) {
       pagebreak: { mode: ["avoid-all", "css", "legacy"] },
     };
 
-    await html2pdf().set(opt).from(container).save();
-    document.body.removeChild(container);
+    await html2pdf().set(opt).from(fullHtml).save();
   };
 
   const exportJSON = () => {
