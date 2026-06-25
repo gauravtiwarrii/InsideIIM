@@ -466,7 +466,7 @@ function ReportPageContent() {
     document.body.appendChild(container);
 
     const opt = {
-      margin: [0.5, 0.6, 0.5, 0.6],
+      margin: [0.5, 0.6, 0.5, 0.6] as [number, number, number, number],
       filename: `${company}_InvestIQ_Report.pdf`,
       image: { type: "jpeg" as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },

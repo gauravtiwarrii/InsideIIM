@@ -47,7 +47,7 @@ const graphStateChannels = {
   },
   revisionCount: {
     value: (x: number, y: number) => y ?? x,
-    default: () => null,
+    default: () => 0,
   },
   reportData: {
     value: (x: any, y: any) => y ?? x,
