@@ -10,10 +10,10 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
 })
 
-// Initialize Ratelimit (5 requests per day per IP/User)
+// Initialize Ratelimit (50 requests per day per IP/User for testing)
 const ratelimit = new Ratelimit({
   redis: redis,
-  limiter: Ratelimit.slidingWindow(5, '1 d'),
+  limiter: Ratelimit.slidingWindow(50, '1 d'),
 })
 
 export async function POST(req: NextRequest) {
@@ -219,7 +219,11 @@ export async function POST(req: NextRequest) {
           message: error instanceof Error ? error.message : "An error occurred",
         });
       } finally {
-        controller.close();
+        try {
+          controller.close();
+        } catch (e) {
+          // ignore closed controller errors
+        }
       }
     },
   });
