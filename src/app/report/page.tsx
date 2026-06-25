@@ -622,6 +622,24 @@ function ReportPageContent() {
               {formatElapsed(elapsedTime)}
             </span>
           </div>
+
+          <div className="mt-8 pt-6 border-t border-white/5">
+            <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-3 text-center">While you wait</div>
+            <motion.div
+              key={Math.floor(elapsedTime / 5) % 4}
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              className="text-center text-sm text-zinc-400 italic"
+            >
+              {[
+                "Did you know? The term 'Bear Market' comes from how bears swipe their paws down when attacking.",
+                "Did you know? The New York Stock Exchange began in 1792 under a Buttonwood tree.",
+                "Did you know? The most expensive stock ever is Berkshire Hathaway Class A, trading over $600,000 per share.",
+                "Did you know? 'Blue chip' stocks get their name from poker, where blue chips are traditionally the highest value."
+              ][Math.floor(elapsedTime / 5) % 4]}
+            </motion.div>
+          </div>
         </div>
       </div>
     );

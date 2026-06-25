@@ -629,6 +629,37 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ─── Fun Facts Section ─── */}
+      <section className="relative z-10 px-6 py-24 bg-zinc-900/20 border-y border-white/5">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-extrabold mb-4">Did You Know?</h2>
+            <p className="text-zinc-400">Fascinating insights from the world of finance</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[
+              { emoji: "🍏", text: "Apple was the first U.S. company to hit a $1 Trillion, $2 Trillion, and $3 Trillion market cap." },
+              { emoji: "🍕", text: "The first real-world Bitcoin transaction was 10,000 BTC for two Papa John's pizzas in 2010. Those pizzas would be worth hundreds of millions today!" },
+              { emoji: "👴", text: "Warren Buffett made 99% of his immense wealth after his 50th birthday, proving the sheer power of compound interest over time." },
+              { emoji: "📜", text: "The Dutch East India Company is considered the first multinational corporation and the first to issue stock to the public in 1602." }
+            ].map((fact, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="p-6 rounded-2xl glass-strong border border-white/5 flex gap-4 items-start hover:border-white/10 transition-colors"
+              >
+                <div className="text-3xl">{fact.emoji}</div>
+                <p className="text-sm text-zinc-300 leading-relaxed">{fact.text}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ─── CTA Section ─── */}
       <section className="relative z-10 px-6 py-24">
         <motion.div
