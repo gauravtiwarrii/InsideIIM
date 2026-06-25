@@ -47,6 +47,8 @@ export const metadata: Metadata = {
   },
 };
 
+import RecruiterMode from "@/components/RecruiterMode";
+
 export default function RootLayout({
   children,
 }: {
@@ -56,6 +58,7 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${outfit.variable}`} data-scroll-behavior="smooth">
       <body className="font-sans antialiased bg-black text-foreground min-h-screen flex flex-col">
         {children}
+        <RecruiterMode />
       </body>
     </html>
   );
