@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Caching
-  const cacheKey = `analysis:${companyName.toLowerCase().replace(/\s+/g, '')}`
+  const cacheKey = `analysis_v2:${companyName.toLowerCase().replace(/\s+/g, '')}`
 
   const stream = new ReadableStream({
     async start(controller) {
