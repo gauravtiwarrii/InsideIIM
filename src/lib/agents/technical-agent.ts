@@ -11,11 +11,11 @@ export async function technicalAgent(state: GraphState) {
   if (!chartData || chartData.length === 0) {
     return {
       technicalData: {
-        trend: "NEUTRAL",
-        keySupport: "N/A",
-        keyResistance: "N/A",
+        trend: "Neutral" as const,
+        supportLevel: "N/A",
+        resistanceLevel: "N/A",
         momentum: "Not enough chart data available",
-        citations: []
+        technicalScore: 50
       }
     };
   }
@@ -39,11 +39,11 @@ export async function technicalAgent(state: GraphState) {
     console.error("Technical Agent Error:", error);
     return {
       technicalData: {
-        trend: "NEUTRAL",
-        keySupport: "N/A",
-        keyResistance: "N/A",
+        trend: "Neutral" as const,
+        supportLevel: "N/A",
+        resistanceLevel: "N/A",
         momentum: "Technical analysis is currently unavailable due to API rate limits.",
-        citations: []
+        technicalScore: 50
       },
       currentStep: "technical_complete"
     };

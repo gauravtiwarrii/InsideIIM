@@ -27,7 +27,7 @@ export async function sentimentAgent(state: GraphState) {
     console.error("Sentiment Agent Error:", error);
     return {
       sentimentData: {
-        overallSentiment: "Neutral",
+        overallSentiment: "Neutral" as const,
         institutionalSentiment: "Unknown",
         retailSentiment: "Unknown",
         keySentimentDrivers: ["Data temporarily unavailable"],
