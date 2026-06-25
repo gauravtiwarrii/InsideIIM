@@ -43,10 +43,11 @@ export async function researchAgent(state: GraphState): Promise<Partial<GraphSta
     console.error("Research Agent Error:", error);
     return {
       researchData: {
-        companyOverview: "Data temporarily unavailable due to API rate limits.",
-        businessModel: "Data temporarily unavailable",
+        overview: "Data temporarily unavailable due to API rate limits.",
+        industry: "Data temporarily unavailable",
+        marketPosition: "Data temporarily unavailable",
+        competitors: ["Data temporarily unavailable"],
         leadership: "Data temporarily unavailable",
-        keyCompetitors: ["Data temporarily unavailable"],
         citations: []
       },
       currentStep: "research_complete"
