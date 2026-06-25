@@ -14,9 +14,12 @@ Output ONLY valid JSON in this format:
 }}`;
 
 export const FINANCIAL_PROMPT = `You are a financial analyst.
-Analyze "{companyName}" using the provided search results. Calculate a Financial Health Score (0-100).
+Analyze "{companyName}" using the provided exact financial data and search results. Calculate a Financial Health Score (0-100).
 
-Search Results:
+Exact Financial Data (Prioritize these numbers over search results!):
+{exactFinancialData}
+
+Search Results (For context and text details):
 {searchResults}
 
 Output ONLY valid JSON in this format:

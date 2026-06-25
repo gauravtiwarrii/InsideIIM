@@ -1,4 +1,5 @@
 import { searchTavily } from "../tools/tavily";
+import { getFinancialMetrics } from "../tools/finance";
 import { createLLM } from "./llm";
 import { FINANCIAL_PROMPT } from "./prompts";
 import { GraphState, FinancialDataSchema } from "../schema";
@@ -7,6 +8,14 @@ export async function financialAgent(state: GraphState): Promise<Partial<GraphSt
   if (state.error) return {};
 
   try {
+    let exactFinancialData = "Not available.";
+    if (state.tickerSymbol) {
+      const metrics = await getFinancialMetrics(state.tickerSymbol);
+      if (metrics) {
+        exactFinancialData = JSON.stringify(metrics, null, 2);
+      }
+    }
+
     const results = await searchTavily(`${state.companyName} revenue net income EPS market cap PE ratio financial health`);
     const llm = createLLM();
 
@@ -14,6 +23,7 @@ export async function financialAgent(state: GraphState): Promise<Partial<GraphSt
     const citations = results.map((r: any) => r.url);
     
     const prompt = FINANCIAL_PROMPT.replace("{companyName}", state.companyName)
+      .replace("{exactFinancialData}", exactFinancialData)
       .replace("{searchResults}", searchResultsText);
 
     const structuredLlm = llm.withStructuredOutput(FinancialDataSchema, { method: "jsonMode", name: "financial_data" });

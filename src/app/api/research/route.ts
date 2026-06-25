@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
       try {
         // Stream events from the true LangGraph compiled StateGraph
         const eventStream = await investmentGraph.streamEvents(
-          { companyName },
+          { companyName } as any,
           { version: "v2" }
         );
 
