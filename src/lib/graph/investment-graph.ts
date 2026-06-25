@@ -82,16 +82,19 @@ function routeAfterReview(state: GraphState) {
   return "report"; // Proceed to report generation
 }
 
-// Parallel analysis node: runs financial, news, risk, technical, and sentiment concurrently
+// Helper to delay execution
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+
+// Parallel analysis node: runs financial, news, risk, technical, and sentiment concurrently with a slight stagger
 async function parallelAnalysis(state: GraphState): Promise<Partial<GraphState>> {
   if (state.error) return {};
 
   const [financialResult, newsResult, riskResult, technicalResult, sentimentResult] = await Promise.all([
     financialAgent(state),
-    newsAgent(state),
-    riskAgent(state),
-    technicalAgent(state),
-    sentimentAgent(state)
+    delay(1000).then(() => newsAgent(state)),
+    delay(2000).then(() => riskAgent(state)),
+    delay(3000).then(() => technicalAgent(state)),
+    delay(4000).then(() => sentimentAgent(state))
   ]);
 
   return {
