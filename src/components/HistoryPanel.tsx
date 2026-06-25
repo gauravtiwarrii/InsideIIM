@@ -41,6 +41,14 @@ export function addToHistory(companyName: string, decision: InvestmentDecision) 
   }
 }
 
+const formatTime = (ts: number) => {
+  const diff = Date.now() - ts;
+  if (diff < 60000) return "Just now";
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+  return new Date(ts).toLocaleDateString();
+};
+
 export default function HistoryPanel({ onSelect }: HistoryPanelProps) {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -48,6 +56,7 @@ export default function HistoryPanel({ onSelect }: HistoryPanelProps) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (raw) setHistory(JSON.parse(raw));
     } catch {
       // Ignore
@@ -75,13 +84,6 @@ export default function HistoryPanel({ onSelect }: HistoryPanelProps) {
 
   if (history.length === 0) return null;
 
-  const formatTime = (ts: number) => {
-    const diff = Date.now() - ts;
-    if (diff < 60000) return "Just now";
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-    return new Date(ts).toLocaleDateString();
-  };
 
   return (
     <>

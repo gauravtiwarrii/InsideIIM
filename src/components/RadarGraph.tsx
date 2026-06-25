@@ -8,7 +8,7 @@ import {
   Tooltip,
 } from "recharts";
 
-export default function RadarGraph({ financial, news, risk, investment }: any) {
+export default function RadarGraph({ financial, news, risk, investment }: { financial: number; news: number; risk: number; investment: number }) {
   const data = [
     { subject: "Financial Health", A: financial, fullMark: 100 },
     { subject: "News Sentiment", A: news, fullMark: 100 },

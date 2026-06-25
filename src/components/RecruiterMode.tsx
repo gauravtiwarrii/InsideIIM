@@ -20,7 +20,6 @@ export default function RecruiterMode() {
 
   useEffect(() => {
     if (isOpen && !showReport) {
-      setStepIndex(0);
       const interval = setInterval(() => {
         setStepIndex((prev) => {
           if (prev >= LOADING_STEPS.length - 1) {
@@ -41,7 +40,7 @@ export default function RecruiterMode() {
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(true)}
+        onClick={() => { setIsOpen(true); setStepIndex(0); setShowReport(false); }}
         className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-5 py-3 rounded-full font-semibold shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] transition-shadow group"
       >
         <Briefcase className="w-5 h-5 group-hover:animate-bounce" />
