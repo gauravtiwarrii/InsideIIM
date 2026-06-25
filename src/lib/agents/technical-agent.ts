@@ -39,12 +39,12 @@ export async function technicalAgent(state: GraphState) {
     console.error("Technical Agent Error:", error);
     return {
       technicalData: {
-        trend: "Neutral",
-        supportLevel: "N/A",
-        resistanceLevel: "N/A",
-        momentum: "Failed to parse technical data",
-        technicalScore: 50
-      }
+        trendSummary: "Technical analysis is currently unavailable due to API rate limits.",
+        supportResistanceLevels: "Data temporarily unavailable",
+        momentumIndicators: "Data temporarily unavailable",
+        citations: []
+      },
+      currentStep: "technical_complete"
     };
   }
 }

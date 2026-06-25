@@ -91,10 +91,10 @@ async function parallelAnalysis(state: GraphState): Promise<Partial<GraphState>>
 
   const [financialResult, newsResult, riskResult, technicalResult, sentimentResult] = await Promise.all([
     financialAgent(state),
-    delay(1000).then(() => newsAgent(state)),
-    delay(2000).then(() => riskAgent(state)),
-    delay(3000).then(() => technicalAgent(state)),
-    delay(4000).then(() => sentimentAgent(state))
+    delay(3000).then(() => newsAgent(state)),
+    delay(6000).then(() => riskAgent(state)),
+    delay(9000).then(() => technicalAgent(state)),
+    delay(12000).then(() => sentimentAgent(state))
   ]);
 
   return {

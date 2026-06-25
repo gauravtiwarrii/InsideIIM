@@ -30,9 +30,10 @@ export async function sentimentAgent(state: GraphState) {
         overallSentiment: "Neutral",
         institutionalSentiment: "Unknown",
         retailSentiment: "Unknown",
-        keySentimentDrivers: [],
+        keySentimentDrivers: ["Data temporarily unavailable"],
         sentimentScore: 50
-      }
+      },
+      currentStep: "sentiment_complete"
     };
   }
 }
