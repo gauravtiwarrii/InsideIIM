@@ -81,7 +81,9 @@ function SkeletonSection({ lines = 3 }: { lines?: number }) {
   );
 }
 
-export default function ReportPage() {
+import { createClient } from '@/utils/supabase/client'
+
+export default function ReportPage({ params }: { params: Promise<{ id: string }> }) {
   return (
     <Suspense
       fallback={
@@ -90,158 +92,64 @@ export default function ReportPage() {
         </div>
       }
     >
-      <ReportPageContent />
+      <ReportPageContent params={params} />
     </Suspense>
   );
 }
 
-function ReportPageContent() {
-  const searchParams = useSearchParams();
+function ReportPageContent({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const company = searchParams.get("company");
-
+  
   const [loading, setLoading] = useState(true);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [loadingMessages, setLoadingMessages] = useState<string[]>([
-    "Initializing LangGraph orchestration...",
-  ]);
-
-  // Progressive data — each section arrives independently
+  const [currentStepIndex, setCurrentStepIndex] = useState(STEPS.length);
+  const [loadingMessages, setLoadingMessages] = useState<string[]>([]);
+  
   const [researchData, setResearchData] = useState<any>(null);
   const [financialData, setFinancialData] = useState<any>(null);
   const [newsData, setNewsData] = useState<any>(null);
   const [riskData, setRiskData] = useState<any>(null);
   const [investmentData, setInvestmentData] = useState<any>(null);
+  const [technicalData, setTechnicalData] = useState<any>(null);
+  const [sentimentData, setSentimentData] = useState<any>(null);
   const [chartData, setChartData] = useState<any>(null);
   const [tickerSymbol, setTickerSymbol] = useState<string | null>(null);
+  const [company, setCompany] = useState<string>("");
 
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const reportRef = useRef<HTMLDivElement>(null);
-  const startTimeRef = useRef<number>(Date.now());
-
+  const supabase = createClient();
   const { toast, showToast, hideToast } = useToast();
 
-  // Elapsed time counter
   useEffect(() => {
-    if (!loading) return;
-    startTimeRef.current = Date.now();
-    const interval = setInterval(() => {
-      setElapsedTime(Math.floor((Date.now() - startTimeRef.current) / 1000));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [loading]);
-
-  useEffect(() => {
-    if (!company) return;
-
-    let isSubscribed = true;
-    let index = 0;
-
-    const runAnalysis = async () => {
+    async function loadReport() {
       try {
-        const response = await fetch("/api/research", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ companyName: company }),
-        });
-
-        if (!response.ok) throw new Error("Analysis failed to start.");
-
-        const reader = response.body?.getReader();
-        const decoder = new TextDecoder();
-
-        if (!reader) throw new Error("No response body.");
-
-        let buffer = "";
-
-        while (isSubscribed) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-
-          const messages = buffer.split("\n\n");
-          buffer = messages.pop() || "";
-
-          for (const message of messages) {
-            const lines = message.split("\n");
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                const dataStr = line.slice(6);
-                try {
-                  const event = JSON.parse(dataStr);
-
-                  if (event.type === "step") {
-                    setLoadingMessages((prev) => [...prev, event.message]);
-                    if (event.message === "Review failed. Requesting revision...") {
-                      index = 4;
-                      setCurrentStepIndex(index);
-                    } else if (
-                      index < STEPS.length - 1 &&
-                      STEPS.map((s) => s.label).includes(event.message)
-                    ) {
-                      index++;
-                      setCurrentStepIndex(index);
-                    } else if (event.message === "Critiquing recommendation...") {
-                      setCurrentStepIndex(5);
-                    }
-                  } else if (event.type === "research" && event.data) {
-                    setResearchData(event.data);
-                  } else if (event.type === "financial" && event.data) {
-                    setFinancialData(event.data);
-                  } else if (event.type === "news" && event.data) {
-                    setNewsData(event.data);
-                  } else if (event.type === "risk" && event.data) {
-                    setRiskData(event.data);
-                  } else if (event.type === "investment" && event.data) {
-                    setInvestmentData(event.data);
-                  } else if (event.type === "error") {
-                    setError(event.message);
-                    setLoading(false);
-                    isSubscribed = false;
-                  } else if (event.type === "complete") {
-                    setResult(event.data);
-                    // Set any remaining data from the complete event
-                    if (event.data.researchData) setResearchData(event.data.researchData);
-                    if (event.data.financialData) setFinancialData(event.data.financialData);
-                    if (event.data.newsData) setNewsData(event.data.newsData);
-                    if (event.data.riskData) setRiskData(event.data.riskData);
-                    if (event.data.investmentData) setInvestmentData(event.data.investmentData);
-                    if (event.data.chartData) setChartData(event.data.chartData);
-                    if (event.data.tickerSymbol) setTickerSymbol(event.data.tickerSymbol);
-                    setCurrentStepIndex(STEPS.length);
-                    setLoading(false);
-                    isSubscribed = false;
-
-                    // Auto-save to watchlist
-                    if (event.data.investmentData) {
-                      addToWatchlist(
-                        company,
-                        event.data.investmentData.recommendation,
-                        event.data.investmentData.investmentScore
-                      );
-                    }
-                  }
-                } catch {
-                  // Ignore parse errors
-                }
-              }
-            }
-          }
-        }
+        const { id } = await params;
+        const { data, error } = await supabase.from('reports').select('*').eq('id', id).single();
+        if (error) throw error;
+        
+        const reportData = data.report_data;
+        setResult(reportData);
+        setCompany(data.company_name);
+        setResearchData(reportData.researchData);
+        setFinancialData(reportData.financialData);
+        setNewsData(reportData.newsData);
+        setRiskData(reportData.riskData);
+        setTechnicalData(reportData.technicalData);
+        setSentimentData(reportData.sentimentData);
+        setInvestmentData(reportData.investmentData);
+        setChartData(reportData.chartData);
+        setTickerSymbol(reportData.tickerSymbol);
+        
       } catch (err: any) {
-        if (isSubscribed) {
-          setError(err.message || "An unexpected error occurred.");
-          setLoading(false);
-        }
+        setError("Failed to load report: " + err.message);
+      } finally {
+        setLoading(false);
       }
-    };
-
-    runAnalysis();
-    return () => { isSubscribed = false; };
-  }, [company]);
+    }
+    loadReport();
+  }, [params]);
 
   const exportPDF = async () => {
     const html2pdf = (await import("html2pdf.js")).default;
@@ -492,13 +400,9 @@ function ReportPageContent() {
   };
 
   const copyLink = useCallback(() => {
-    let urlToCopy = window.location.href;
-    if (result && result.dbId) {
-      urlToCopy = `${window.location.origin}/report/${result.dbId}`;
-    }
-    navigator.clipboard.writeText(urlToCopy);
+    navigator.clipboard.writeText(window.location.href);
     showToast("Report link copied to clipboard!", "copy");
-  }, [showToast, result]);
+  }, [showToast]);
 
   const formatElapsed = (s: number) => {
     const mins = Math.floor(s / 60);

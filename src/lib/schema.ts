@@ -57,12 +57,30 @@ export const TickerSchema = z.object({
   ticker: z.string().nullable().describe("The primary stock ticker symbol, or null if private/unknown"),
 });
 
+export const TechnicalDataSchema = z.object({
+  trend: z.enum(["Bullish", "Bearish", "Neutral"]).describe("Price trend"),
+  supportLevel: z.string().describe("Key support level"),
+  resistanceLevel: z.string().describe("Key resistance level"),
+  momentum: z.string().describe("Momentum description"),
+  technicalScore: z.number().min(0).max(100).describe("Technical Score (0-100)"),
+});
+
+export const SentimentDataSchema = z.object({
+  overallSentiment: z.enum(["Bullish", "Bearish", "Neutral"]).describe("Overall sentiment"),
+  institutionalSentiment: z.string().describe("Institutional view"),
+  retailSentiment: z.string().describe("Retail view"),
+  keySentimentDrivers: z.array(z.string()).describe("Drivers of sentiment"),
+  sentimentScore: z.number().min(0).max(100).describe("Sentiment Score (0-100)"),
+});
+
 // Infer types
 export type ResearchData = z.infer<typeof ResearchDataSchema>;
 export type FinancialData = z.infer<typeof FinancialDataSchema>;
 export type NewsData = z.infer<typeof NewsDataSchema>;
 export type RiskData = z.infer<typeof RiskDataSchema>;
 export type InvestmentData = z.infer<typeof InvestmentDataSchema>;
+export type TechnicalData = z.infer<typeof TechnicalDataSchema>;
+export type SentimentData = z.infer<typeof SentimentDataSchema>;
 
 // LangGraph state requires a specific shape, often using channels.
 // For simplicity in a basic StateGraph, we can define the overall state interface:
@@ -75,6 +93,8 @@ export interface GraphState {
   financialData: FinancialData | null;
   newsData: NewsData | null;
   riskData: RiskData | null;
+  technicalData: TechnicalData | null;
+  sentimentData: SentimentData | null;
   
   investmentData: InvestmentData | null;
   
@@ -85,3 +105,4 @@ export interface GraphState {
   error: string | null;
   currentStep: string;
 }
+

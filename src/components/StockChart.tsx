@@ -7,6 +7,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Line
 } from "recharts";
 
 interface StockChartProps {
@@ -19,9 +20,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return (
       <div className="chart-tooltip">
         <p className="tooltip-date">{label}</p>
-        <p className="tooltip-price">
-          ${Number(payload[0].value).toFixed(2)}
+        <p className="tooltip-price" style={{ color: payload[0].color }}>
+          Price: ${Number(payload[0].value).toFixed(2)}
         </p>
+        {payload[1] && (
+          <p className="tooltip-price" style={{ color: payload[1].color, fontSize: '12px' }}>
+            SMA20: ${Number(payload[1].value).toFixed(2)}
+          </p>
+        )}
       </div>
     );
   }
@@ -30,6 +36,17 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function StockChart({ data, ticker }: StockChartProps) {
   if (!data || data.length === 0) return null;
+
+  // Calculate SMA20
+  const processedData = data.map((item, index) => {
+    let sma20 = null;
+    if (index >= 19) {
+      const window = data.slice(index - 19, index + 1);
+      const sum = window.reduce((acc, curr) => acc + curr.price, 0);
+      sma20 = sum / 20;
+    }
+    return { ...item, sma20 };
+  });
 
   // Calculate percentage change to decide color
   const firstPrice = data[0].price;
@@ -45,7 +62,7 @@ export default function StockChart({ data, ticker }: StockChartProps) {
       <div className="chart-header">
         <div className="chart-title">
           <span className="ticker-badge">{ticker}</span>
-          <span>6-Month Trend</span>
+          <span>6-Month Trend & SMA20</span>
         </div>
         <div className={`chart-change ${isPositive ? "positive" : "negative"}`}>
           {isPositive ? "↑" : "↓"} {Math.abs(Number(changePercent))}%
@@ -55,7 +72,7 @@ export default function StockChart({ data, ticker }: StockChartProps) {
       <div className="chart-wrapper">
         <ResponsiveContainer width="100%" height={250}>
           <AreaChart
-            data={data}
+            data={processedData}
             margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
           >
             <defs>
@@ -90,6 +107,15 @@ export default function StockChart({ data, ticker }: StockChartProps) {
               stroke={strokeColor}
               strokeWidth={3}
               fill={fillColor}
+              animationDuration={1500}
+            />
+            <Line
+              type="monotone"
+              dataKey="sma20"
+              stroke="#60a5fa"
+              strokeWidth={2}
+              dot={false}
+              isAnimationActive={true}
               animationDuration={1500}
             />
           </AreaChart>

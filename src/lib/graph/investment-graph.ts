@@ -4,6 +4,8 @@ import { researchAgent } from "../agents/research-agent";
 import { financialAgent } from "../agents/financial-agent";
 import { newsAgent } from "../agents/news-agent";
 import { riskAgent } from "../agents/risk-agent";
+import { technicalAgent } from "../agents/technical-agent";
+import { sentimentAgent } from "../agents/sentiment-agent";
 import { investmentAgent } from "../agents/investment-agent";
 import { reviewerAgent } from "../agents/reviewer-agent";
 
@@ -34,6 +36,14 @@ const graphStateChannels = {
     default: () => null,
   },
   riskData: {
+    value: (x: any, y: any) => y ?? x,
+    default: () => null,
+  },
+  technicalData: {
+    value: (x: any, y: any) => y ?? x,
+    default: () => null,
+  },
+  sentimentData: {
     value: (x: any, y: any) => y ?? x,
     default: () => null,
   },
@@ -72,20 +82,24 @@ function routeAfterReview(state: GraphState) {
   return "report"; // Proceed to report generation
 }
 
-// Parallel analysis node: runs financial, news, and risk concurrently
+// Parallel analysis node: runs financial, news, risk, technical, and sentiment concurrently
 async function parallelAnalysis(state: GraphState): Promise<Partial<GraphState>> {
   if (state.error) return {};
 
-  const [financialResult, newsResult, riskResult] = await Promise.all([
+  const [financialResult, newsResult, riskResult, technicalResult, sentimentResult] = await Promise.all([
     financialAgent(state),
     newsAgent(state),
     riskAgent(state),
+    technicalAgent(state),
+    sentimentAgent(state)
   ]);
 
   return {
     ...financialResult,
     ...newsResult,
     ...riskResult,
+    ...technicalResult,
+    ...sentimentResult,
     currentStep: "parallel_complete",
   };
 }
@@ -106,6 +120,8 @@ const builder = new StateGraph<GraphState>({ channels: graphStateChannels })
         financialData: state.financialData,
         newsData: state.newsData,
         riskData: state.riskData,
+        technicalData: state.technicalData,
+        sentimentData: state.sentimentData,
         investmentData: state.investmentData,
       },
       currentStep: "complete"

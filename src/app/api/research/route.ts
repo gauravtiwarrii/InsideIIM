@@ -1,5 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { investmentGraph } from "@/lib/graph/investment-graph";
+import { Redis } from '@upstash/redis'
+import { Ratelimit } from '@upstash/ratelimit'
+import { createClient } from '@/utils/supabase/server'
+
+// Initialize Upstash Redis
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+})
+
+// Initialize Ratelimit (5 requests per day per IP/User)
+const ratelimit = new Ratelimit({
+  redis: redis,
+  limiter: Ratelimit.slidingWindow(5, '1 d'),
+})
 
 export async function POST(req: NextRequest) {
   const { companyName } = await req.json();
@@ -8,9 +23,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Company name is required" }, { status: 400 });
   }
 
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // Rate Limiting
+  const identifier = user ? user.id : req.headers.get("x-forwarded-for") ?? 'anonymous'
+  const { success } = await ratelimit.limit(identifier)
+  
+  if (!success) {
+    return NextResponse.json({ error: "Rate limit exceeded. Please try again tomorrow." }, { status: 429 });
+  }
+
+  // Caching
+  const cacheKey = `analysis:${companyName.toLowerCase().replace(/\s+/g, '')}`
+
   const stream = new ReadableStream({
     async start(controller) {
-      // Track accumulated agent outputs as fallback
       let completeSent = false;
       let controllerClosed = false;
       const collectedData: Record<string, any> = {};
@@ -20,13 +48,25 @@ export async function POST(req: NextRequest) {
         try {
           controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(event)}\n\n`));
         } catch {
-          // Controller may already be closed
           controllerClosed = true;
         }
       };
 
       try {
-        // Stream events from the true LangGraph compiled StateGraph
+        // Check Cache first
+        const cachedReport = await redis.get(cacheKey)
+        if (cachedReport) {
+          sendEvent({ type: "step", data: null, message: "Retrieving from fast cache..." });
+          sendEvent({
+            type: "complete",
+            data: cachedReport,
+            message: "Analysis retrieved from cache!",
+          });
+          controller.close();
+          return;
+        }
+
+        // Stream events from LangGraph
         const eventStream = await investmentGraph.streamEvents(
           { companyName } as any,
           { version: "v2" }
@@ -34,15 +74,12 @@ export async function POST(req: NextRequest) {
 
         for await (const event of eventStream) {
           if (event.event === "on_chain_end" && event.name === "LangGraph") {
-            // The final LangGraph event — try multiple output structures
             const finalState = event.data?.output;
             let reportPayload = null;
 
             if (finalState?.reportData) {
-              // Ideal case: the report node packaged it
               reportPayload = finalState.reportData;
             } else if (finalState) {
-              // Fallback: the state has all data at the top level
               reportPayload = {
                 companyName: finalState.companyName ?? companyName,
                 tickerSymbol: finalState.tickerSymbol ?? null,
@@ -56,6 +93,32 @@ export async function POST(req: NextRequest) {
             }
 
             if (reportPayload) {
+              // Save to Redis Cache (24 hours)
+              await redis.set(cacheKey, reportPayload, { ex: 86400 })
+
+              // Save to Supabase DB if user is logged in
+              let dbId = null;
+              if (user) {
+                const { data: insertedReport, error: dbError } = await supabase
+                  .from('reports')
+                  .insert({
+                    user_id: user.id,
+                    company_name: reportPayload.companyName,
+                    ticker_symbol: reportPayload.tickerSymbol,
+                    investment_score: reportPayload.investmentData?.investmentScore,
+                    confidence_score: reportPayload.investmentData?.confidenceScore,
+                    recommendation: reportPayload.investmentData?.recommendation,
+                    report_data: reportPayload
+                  })
+                  .select('id')
+                  .single()
+                
+                if (insertedReport) {
+                  dbId = insertedReport.id;
+                  reportPayload.dbId = dbId;
+                }
+              }
+
               sendEvent({
                 type: "complete",
                 data: reportPayload,
@@ -106,22 +169,44 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // Fallback: if the stream ended but no complete event was sent,
-        // assemble the report from collected agent outputs
         if (!completeSent && collectedData.investmentData) {
           console.log("[API] Sending fallback complete event from collected data");
+          const fallbackPayload = {
+            companyName,
+            tickerSymbol: collectedData.tickerSymbol ?? null,
+            chartData: collectedData.chartData ?? null,
+            researchData: collectedData.researchData ?? null,
+            financialData: collectedData.financialData ?? null,
+            newsData: collectedData.newsData ?? null,
+            riskData: collectedData.riskData ?? null,
+            investmentData: collectedData.investmentData ?? null,
+          };
+          
+          await redis.set(cacheKey, fallbackPayload, { ex: 86400 })
+          
+          if (user) {
+            const { data: insertedReport } = await supabase
+              .from('reports')
+              .insert({
+                user_id: user.id,
+                company_name: fallbackPayload.companyName,
+                ticker_symbol: fallbackPayload.tickerSymbol,
+                investment_score: fallbackPayload.investmentData?.investmentScore,
+                confidence_score: fallbackPayload.investmentData?.confidenceScore,
+                recommendation: fallbackPayload.investmentData?.recommendation,
+                report_data: fallbackPayload
+              })
+              .select('id')
+              .single()
+              
+            if (insertedReport) {
+              (fallbackPayload as any).dbId = insertedReport.id;
+            }
+          }
+
           sendEvent({
             type: "complete",
-            data: {
-              companyName,
-              tickerSymbol: collectedData.tickerSymbol ?? null,
-              chartData: collectedData.chartData ?? null,
-              researchData: collectedData.researchData ?? null,
-              financialData: collectedData.financialData ?? null,
-              newsData: collectedData.newsData ?? null,
-              riskData: collectedData.riskData ?? null,
-              investmentData: collectedData.investmentData ?? null,
-            },
+            data: fallbackPayload,
             message: "Analysis complete!",
           });
           completeSent = true;
