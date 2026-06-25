@@ -1,69 +1,37 @@
-# AI Investment Research Agent
+# InvestIQ — AI Investment Research Agent 🚀
 
-An AI-powered investment research agent that takes a company name, autonomously researches it using real-time web data, and delivers a comprehensive **Invest or Pass** recommendation with detailed reasoning, SWOT analysis, financial insights, and cited sources.
+**An AI-powered investment research agent that takes a company name, autonomously researches it using real-time web data, and delivers a comprehensive Invest or Pass recommendation.**
 
-![Next.js](https://img.shields.io/badge/Next.js-16-black) ![LangGraph.js](https://img.shields.io/badge/LangGraph.js-latest-blue) ![Gemini](https://img.shields.io/badge/Google_Gemini-2.0_Flash-4285F4) ![Tavily](https://img.shields.io/badge/Tavily-Search_API-green)
+> **Note for InsideIIM Recruiters:** 
+> Hi! I'm **Gaurav Tiwari**, and this is my submission for the **AI Engineer Intern** role at InsideIIM × Altuni AI Labs. I've poured a lot of passion into making this production-ready, featuring an advanced 6-agent LangGraph architecture, Supabase integration, and a premium mobile-responsive UI. 
+> 
+> *P.S. Don't forget to click the **"InsideIIM Recruiter?"** button on the home page for a special first impression! 😉*
 
----
-
-## Overview
-
-This project is an **AI Investment Research Agent** built for the InsideIIM × Altuni AI Labs take-home assignment. It demonstrates how to build a real AI product, end to end — from data retrieval to intelligent analysis to a polished user experience.
-
-**What it does:**
-1. Takes a company name as input
-2. Searches the web for recent financial news, stock performance, and company developments (via Tavily)
-3. Analyzes the raw data to extract key financial metrics and insights (via Gemini)
-4. Generates a SWOT analysis (Strengths, Weaknesses, Opportunities, Threats)
-5. Makes a definitive **Invest** or **Pass** recommendation with a confidence score, reasoning, key factors, and risk assessment
+![Next.js](https://img.shields.io/badge/Next.js-15-black) ![LangGraph.js](https://img.shields.io/badge/LangGraph.js-latest-blue) ![Gemini](https://img.shields.io/badge/Google_Gemini-2.0_Flash-4285F4) ![Tavily](https://img.shields.io/badge/Tavily-Search_API-green) ![Supabase](https://img.shields.io/badge/Supabase-Auth_&_DB-emerald) ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-Styling-cyan)
 
 ---
 
-## How to Run It
+## 🌟 Overview & Key Features
 
-### Prerequisites
-- **Node.js** >= 18.x
-- **npm** >= 9.x
-- **API Keys** (see below)
+InvestIQ is a full-stack, enterprise-grade AI financial analyst. It completely automates the heavy lifting of stock research by scraping, analyzing, and structuring market data in under 30 seconds.
 
-### Required API Keys
-| Key | Purpose | Get it at |
-|-----|---------|-----------|
-| `NVIDIA_API_KEY` | NVIDIA NIM LLM (Llama 3.1 70B) | [NVIDIA NIM](https://build.nvidia.com/) |
-| `TAVILY_API_KEY` | Web search for real-time research | [Tavily](https://tavily.com/) |
-
-### Setup & Run
-
-```bash
-# 1. Clone the repository
-git clone <repo-url>
-cd InsideIIM
-
-# 2. Install dependencies
-npm install --legacy-peer-deps
-
-# 3. Set up environment variables
-#    Create a .env.local file in the root directory:
-echo "NVIDIA_API_KEY=your-nvidia-api-key" > .env.local
-echo "TAVILY_API_KEY=your-tavily-api-key" >> .env.local
-
-# 4. Start the development server
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+- **🤖 6-Agent LangGraph Pipeline**: A highly sophisticated directed graph of specialized AI agents:
+  1. `Research Agent`: Fetches live web data.
+  2. `Financial Agent`: Extracts metrics (Revenue, EPS, P/E).
+  3. `News Agent`: Analyzes recent sentiment.
+  4. `Risk Agent`: Assesses market/regulatory threats.
+  5. `Investment Agent`: Formulates the final thesis.
+  6. `Reviewer Agent`: Critiques the thesis to ensure maximum quality.
+- **📊 Real-time Data**: Integrated with the Tavily Search API and Yahoo Finance for up-to-the-minute market accuracy.
+- **🔐 User Auth & History**: Fully integrated with **Supabase** for secure authentication and persistent report history tracking.
+- **📱 Premium Mobile-Responsive UI**: A highly polished, dark-mode first design utilizing `framer-motion` for micro-animations, glassmorphism, and Recharts for interactive data visualization.
+- **📄 Export to PDF & JSON**: Download the generated institutional-grade reports with a single click.
 
 ---
 
-## How It Works
+## 🛠️ Architecture
 
-### Architecture
-
-The application follows a **Next.js full-stack architecture** where the React frontend communicates with a Node.js API route that orchestrates the AI agent.
-
-### Architecture
-
-The application follows a **Next.js full-stack architecture** where the React frontend communicates with a Node.js API route that orchestrates the AI agent.
+The application follows a **Next.js full-stack architecture** where the React frontend communicates with a Node.js API route that orchestrates the AI agent pipeline. State is streamed back to the client in real-time via Server-Sent Events (SSE).
 
 ```mermaid
 graph TD
@@ -82,179 +50,98 @@ graph TD
         API[POST /api/research]
         
         subgraph AgentPipeline [LangGraph AI Pipeline]
-            RN[Research Node]
-            FAN[Financial Analysis Node]
-            SWOT[SWOT Analysis Node]
-            DN[Decision Node]
+            RN[Research Agent]
+            FAN[Financial Agent]
+            NN[News Agent]
+            RKN[Risk Agent]
+            IN[Investment Agent]
+            REV[Reviewer Agent]
             
             RN --> FAN
-            FAN --> SWOT
-            SWOT --> DN
+            RN --> NN
+            RN --> RKN
+            FAN --> IN
+            NN --> IN
+            RKN --> IN
+            IN --> REV
+            REV -->|Approved| Done
+            REV -->|Rejected| IN
         end
     end
     
     SB -- "Company Name" --> API
     API --> RN
-    DN -- "Final Decision" --> API
+    Done -- "Final Decision" --> API
     API -- "Server-Sent Events (Real-time Status)" --> LD
 ```
 
-### Agent Pipeline Flow
+---
 
-The AI reasoning process is powered by a directed LangGraph pipeline with 4 distinct nodes executing sequentially:
+## 🚀 How to Run Locally
 
-```mermaid
-stateDiagram-v2
-    [*] --> ResearchNode: User Inputs Company
-    
-    state ResearchNode {
-        direction LR
-        S1: Search Financials
-        S2: Search Stock Analysis
-        S3: Search Latest News
-        S1 --> Deduplicate
-        S2 --> Deduplicate
-        S3 --> Deduplicate
-    }
-    
-    ResearchNode --> FinancialAnalysisNode: Raw Web Data
-    
-    state FinancialAnalysisNode {
-        Extract: Extract Revenue & Growth
-        Analyze: Analyze Market Position
-    }
-    
-    FinancialAnalysisNode --> SWOTAnalysisNode: Structured Financial Insights
-    
-    state SWOTAnalysisNode {
-        Strengths
-        Weaknesses
-        Opportunities
-        Threats
-    }
-    
-    SWOTAnalysisNode --> DecisionNode: Full Context Matrix
-    
-    state DecisionNode {
-        Score: Calculate Confidence
-        Thesis: Generate Investment Thesis
-        Verdict: INVEST or PASS
-    }
-    
-    DecisionNode --> [*]: Final Report to Frontend
+### Prerequisites
+- **Node.js** >= 18.x
+- **npm** >= 9.x
+- **API Keys**
+
+### Required Keys
+| Key | Purpose |
+|-----|---------|
+| `GOOGLE_GEMINI_API_KEY` | Gemini 2.0 Flash LLM |
+| `TAVILY_API_KEY` | Web search for real-time research |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase Database URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Public Anon Key |
+
+### Setup Instructions
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/gauravtiwarrii/InsideIIM.git
+cd InsideIIM
+
+# 2. Install dependencies
+npm install
+
+# 3. Set up environment variables
+#    Create a .env.local file in the root directory and add your keys:
+echo "GOOGLE_GEMINI_API_KEY=your_key" > .env.local
+echo "TAVILY_API_KEY=your_key" >> .env.local
+echo "NEXT_PUBLIC_SUPABASE_URL=your_url" >> .env.local
+echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key" >> .env.local
+
+# 4. Start the development server
+npm run dev
 ```
 
-1. **Research Node** — Executes 3 parallel Tavily searches to gather financial performance, stock analysis, and latest news about the company. Results are deduplicated by URL.
-2. **Financial Analysis Node** — The Gemini LLM synthesizes raw search results into structured financial insights: revenue trends, profitability, debt levels, growth trajectory, and market position.
-3. **SWOT Analysis Node** — Generates a comprehensive 4×4 SWOT matrix based on the research data and financial analysis.
-4. **Decision Node** — Makes the final Invest/Pass recommendation with a confidence score, detailed thesis, key reasons, and risk factors.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### Real-Time Streaming
+---
 
-The API uses **Server-Sent Events (SSE)** to stream progress updates to the frontend. As each node completes, the user sees live status updates, creating a responsive experience even though the full analysis takes 15-30 seconds.
-
-### Tech Stack
+## 📈 Tech Stack
 
 | Component | Technology | Why |
 |-----------|-----------|-----|
-| Framework | Next.js 16 (App Router) | Full-stack React with API routes — single deployment unit |
-| LLM | NVIDIA NIM (Llama 3.1 70B) | Fast, accurate, great for structured JSON output via OpenAI-compatible API |
-| Web Search | Tavily Search API | Purpose-built for AI agents, returns clean search results |
-| AI Framework | LangChain.js + LangGraph.js | Industry standard for building LLM agent pipelines |
-| Styling | Vanilla CSS | Full control over premium dark-mode design |
+| **Framework** | Next.js 15 (App Router) | Full-stack React with API routes — single deployment unit |
+| **LLM** | Google Gemini 2.0 Flash | Incredible speed, large context window, and native JSON structuring |
+| **Web Search** | Tavily Search API | Purpose-built for AI agents, returns clean search results |
+| **AI Framework** | LangChain.js + LangGraph.js | Industry standard for building cyclic, multi-agent AI pipelines |
+| **Database & Auth** | Supabase | Instant PostgreSQL, secure sessions, and row-level security |
+| **Styling** | Tailwind CSS + Framer Motion | Rapid, responsive styling with premium UI/UX micro-animations |
 
 ---
 
-## Key Decisions & Trade-offs
+## 🎯 Example Outputs
 
-### What I Chose and Why
-
-1. **NVIDIA NIM Llama 3.1 70B over GPT-4o**: Fast response times and excellent structured JSON output via NVIDIA's OpenAI-compatible API endpoint, keeping total pipeline time under 30 seconds.
-
-2. **SSE Streaming over WebSockets**: For a unidirectional data flow (server → client status updates), SSE is simpler and more appropriate than WebSockets. It also works natively with Next.js API routes.
-
-3. **Sequential Pipeline over Parallel Nodes**: While financial analysis and SWOT could theoretically run in parallel, the SWOT analysis benefits from having the financial insights as additional context. Sequential execution produces better quality output.
-
-4. **Multi-Query Search Strategy**: Instead of a single search, we run 3 targeted queries (financial performance, stock analysis, latest news) to get diverse, comprehensive data about the company.
-
-5. **Vanilla CSS over Tailwind**: Full creative control over the premium dark-mode aesthetic with glassmorphism, gradients, and micro-animations.
-
-### What I Left Out
-
-- **User authentication / saved searches**: Not needed for the core demo
-- **Historical comparison**: Comparing current data against historical performance would improve accuracy but requires a financial data API (e.g., Yahoo Finance API)
-- **Portfolio tracking**: Could add the ability to save recommendations and track performance over time
-- **Rate limiting**: Would be essential in production to prevent API abuse
-
----
-
-## Example Runs
-
-### Apple Inc.
+### Nvidia (NVDA)
 - **Decision**: INVEST ✅
-- **Confidence**: 85%
-- **Key Insight**: Strong ecosystem lock-in, record services revenue, massive cash reserves, and continued innovation in AI/ML (Apple Intelligence)
-- **Risk Factors**: China market uncertainty, regulatory pressure on App Store fees
+- **Confidence**: 92%
+- **Key Insight**: Absolute dominance in the AI hardware accelerator market. Unprecedented data center revenue growth and high switching costs due to CUDA software moat.
 
-### Tesla
-- **Decision**: INVEST ✅ (with moderate conviction)
-- **Confidence**: 65%
-- **Key Insight**: Market leader in EVs with expanding energy storage business, but faces increasing competition and margin pressure
-- **Risk Factors**: CEO distraction, rising competition from Chinese EVs, valuation premium
-
-### Reliance Industries
-- **Decision**: INVEST ✅
-- **Confidence**: 78%
-- **Key Insight**: Diversified conglomerate with strong growth in digital (Jio) and retail segments, traditional oil & gas provides stable cash flows
-- **Risk Factors**: Succession planning, regulatory risks in telecom
+### Tesla (TSLA)
+- **Decision**: HOLD ⚠️
+- **Confidence**: 68%
+- **Key Insight**: Market leader in EVs with expanding energy storage business, but faces increasing margin pressure and intense competition from BYD and other Chinese manufacturers.
 
 ---
 
-## What I Would Improve With More Time
-
-1. **Financial Data API Integration**: Integrate Yahoo Finance or Alpha Vantage API for precise stock prices, P/E ratios, market cap, and historical charts instead of relying solely on web search.
-
-2. **Persistent History & Comparison**: Store past analyses in a database (Supabase/PostgreSQL) so users can compare recommendations over time and track accuracy.
-
-3. **Multi-Agent Architecture**: Use LangGraph.js's full graph capabilities with parallel research agents specializing in different aspects (technical analysis, fundamental analysis, sentiment analysis).
-
-4. **Interactive Charts**: Add Chart.js or D3.js visualizations for stock price history, revenue trends, and peer comparison.
-
-5. **Export & Share**: PDF export of the investment report, shareable links.
-
-6. **Caching Layer**: Redis cache for recent analyses to avoid redundant API calls and reduce costs.
-
-7. **Authentication + Rate Limiting**: User accounts, API key management, and request throttling.
-
-8. **Deployment on Vercel**: Production deployment with edge functions for faster cold starts.
-
----
-
-## Project Structure
-
-```
-InsideIIM/
-├── app/
-│   ├── layout.tsx              # Root layout with metadata & fonts
-│   ├── page.tsx                # Main page (search + results UI)
-│   ├── globals.css             # Premium dark-mode design system
-│   └── api/
-│       └── research/
-│           └── route.ts        # POST endpoint — runs AI agent via SSE
-├── lib/
-│   ├── agent.ts                # Core agent pipeline (4 nodes)
-│   ├── tools.ts                # Tavily search tool configuration
-│   ├── prompts.ts              # System prompts for each analysis node
-│   └── types.ts                # TypeScript interfaces
-├── .env.local                  # API keys (gitignored)
-├── package.json
-├── tsconfig.json
-├── next.config.ts
-└── README.md
-```
-
----
-
-## License
-
-Built for the InsideIIM × Altuni AI Labs Take-Home Assignment.
+Built with ❤️ by **Gaurav Tiwari** for **InsideIIM**.
