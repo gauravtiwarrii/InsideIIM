@@ -157,6 +157,8 @@ export default function Home() {
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
 
+  const [filteredSuggestions, setFilteredSuggestions] = useState<any[]>([]);
+
   const typedWord = useTypewriter(
     ["Nvidia", "Tesla", "Reliance", "Apple", "Google", "Infosys"],
     120,
@@ -164,11 +166,26 @@ export default function Home() {
     1800
   );
 
-  const filteredSuggestions = company.trim().length > 0
-    ? COMPANY_DATABASE.filter((c) =>
-        c.toLowerCase().includes(company.toLowerCase())
-      ).slice(0, 8)
-    : [];
+  useEffect(() => {
+    if (!company.trim()) {
+      setFilteredSuggestions([]);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search-stocks?q=${encodeURIComponent(company)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setFilteredSuggestions(data);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [company]);
 
   useEffect(() => {
     const stored = localStorage.getItem("investiq_history");
@@ -235,15 +252,17 @@ export default function Home() {
     } else if (e.key === "Enter" && highlightedIndex >= 0) {
       e.preventDefault();
       const selected = filteredSuggestions[highlightedIndex];
-      setCompany(selected);
+      const name = typeof selected === 'string' ? selected : selected.symbol ? `${selected.name} (${selected.symbol})` : selected.name;
+      setCompany(name);
       setShowSuggestions(false);
-      handleSearch(selected);
+      handleSearch(name);
     } else if (e.key === "Escape") {
       setShowSuggestions(false);
     }
   };
 
-  const selectSuggestion = (name: string) => {
+  const selectSuggestion = (suggestion: any) => {
+    const name = typeof suggestion === 'string' ? suggestion : suggestion.symbol ? `${suggestion.name} (${suggestion.symbol})` : suggestion.name;
     setCompany(name);
     setShowSuggestions(false);
     handleSearch(name);
@@ -418,16 +437,29 @@ export default function Home() {
                       </span>
                     </div>
                     <div className="py-1 max-h-[320px] overflow-y-auto">
-                      {filteredSuggestions.map((name, idx) => {
-                        const matchIndex = name.toLowerCase().indexOf(company.toLowerCase());
-                        const beforeMatch = name.slice(0, matchIndex);
-                        const matchText = name.slice(matchIndex, matchIndex + company.length);
-                        const afterMatch = name.slice(matchIndex + company.length);
+                      {filteredSuggestions.map((suggestion, idx) => {
+                        const name = suggestion.name || suggestion;
+                        const symbol = suggestion.symbol ? `(${suggestion.symbol})` : "";
+                        const exchange = suggestion.exchange ? ` - ${suggestion.exchange}` : "";
+                        
+                        const displayString = `${name} ${symbol}`;
+                        const matchIndex = displayString.toLowerCase().indexOf(company.toLowerCase());
+                        
+                        let beforeMatch = displayString;
+                        let matchText = "";
+                        let afterMatch = "";
+
+                        if (matchIndex !== -1) {
+                          beforeMatch = displayString.slice(0, matchIndex);
+                          matchText = displayString.slice(matchIndex, matchIndex + company.length);
+                          afterMatch = displayString.slice(matchIndex + company.length);
+                        }
+
                         return (
                           <button
-                            key={name}
+                            key={suggestion.symbol || name}
                             type="button"
-                            className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all duration-150 ${
+                            className={`w-full flex items-center justify-between px-4 py-2.5 text-left transition-all duration-150 ${
                               highlightedIndex === idx
                                 ? "bg-emerald-500/10 text-white"
                                 : "text-zinc-300 hover:bg-white/5 hover:text-white"
@@ -435,21 +467,23 @@ export default function Home() {
                             onMouseEnter={() => setHighlightedIndex(idx)}
                             onMouseDown={(e) => {
                               e.preventDefault();
-                              selectSuggestion(name);
+                              selectSuggestion(suggestion);
                             }}
                           >
-                            <Building2 className={`w-4 h-4 flex-shrink-0 ${
-                              highlightedIndex === idx ? "text-emerald-400" : "text-zinc-500"
-                            }`} />
-                            <span className="text-sm font-medium truncate">
-                              {beforeMatch}
-                              <span className="text-emerald-400 font-semibold">{matchText}</span>
-                              {afterMatch}
-                            </span>
-                            {highlightedIndex === idx && (
-                              <kbd className="ml-auto text-[10px] text-zinc-500 border border-zinc-700 rounded px-1 py-0.5 font-mono">
-                                ⏎
-                              </kbd>
+                            <div className="flex items-center gap-3 truncate">
+                              <Building2 className={`w-4 h-4 flex-shrink-0 ${
+                                highlightedIndex === idx ? "text-emerald-400" : "text-zinc-500"
+                              }`} />
+                              <span className="text-sm font-medium truncate">
+                                {beforeMatch}
+                                <span className="text-emerald-400 font-semibold">{matchText}</span>
+                                {afterMatch}
+                              </span>
+                            </div>
+                            {suggestion.exchange && (
+                              <span className="text-[10px] text-zinc-500 font-mono ml-3 border border-zinc-700/50 rounded px-1.5 py-0.5 bg-zinc-800/30 whitespace-nowrap">
+                                {suggestion.exchange}
+                              </span>
                             )}
                           </button>
                         );
