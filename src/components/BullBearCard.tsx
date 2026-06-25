@@ -14,7 +14,11 @@ export default function BullBearCard({ bullCase, bearCase }: BullBearCardProps) 
   }
 
   return (
-    <div className="bull-bear-container">
+    <motion.div 
+      className="bull-bear-container transition-all duration-300"
+      whileHover={{ scale: 1.01, y: -2 }}
+      transition={{ type: "spring", stiffness: 300 }}
+    >
       {/* Bull Case */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
@@ -81,6 +85,6 @@ export default function BullBearCard({ bullCase, bearCase }: BullBearCardProps) 
           ))}
         </ul>
       </motion.div>
-    </div>
+    </motion.div>
   );
 }

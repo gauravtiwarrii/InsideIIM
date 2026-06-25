@@ -276,7 +276,8 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-emerald-500/30 relative overflow-hidden">
+    <div className="min-h-screen bg-black text-white selection:bg-emerald-500/30 relative overflow-hidden font-sans">
+      <div className="absolute inset-0 bg-noise z-0" />
       {/* Watchlist */}
       <WatchlistPanel onSelect={(name) => handleSearch(name)} />
 
@@ -284,9 +285,9 @@ export default function Home() {
       <ParticleBackground />
 
       {/* Ambient Gradients */}
-      <div className="fixed top-[-20%] left-[-15%] w-[50%] h-[50%] bg-emerald-500/8 rounded-full blur-[180px] pointer-events-none" />
-      <div className="fixed bottom-[-20%] right-[-15%] w-[50%] h-[50%] bg-blue-500/8 rounded-full blur-[180px] pointer-events-none" />
-      <div className="fixed top-[30%] right-[10%] w-[25%] h-[25%] bg-purple-500/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="fixed top-[-20%] left-[-15%] w-[50%] h-[50%] bg-emerald-500/10 rounded-full blur-[180px] pointer-events-none animate-blob" />
+      <div className="fixed bottom-[-20%] right-[-15%] w-[50%] h-[50%] bg-blue-500/10 rounded-full blur-[180px] pointer-events-none animate-blob" style={{ animationDelay: "2s" }} />
+      <div className="fixed top-[30%] right-[10%] w-[25%] h-[25%] bg-purple-500/10 rounded-full blur-[140px] pointer-events-none animate-blob" style={{ animationDelay: "4s" }} />
 
       {/* ─── Hero Section ─── */}
       <section className="min-h-screen flex flex-col items-center justify-center px-6 relative z-10">
@@ -318,7 +319,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
-              <h1 className="text-5xl md:text-6xl font-extrabold mb-5 tracking-tight leading-[1.1]">
+              <h1 className="text-5xl md:text-6xl font-display font-extrabold mb-5 tracking-tight leading-[1.1]">
                 AI-Powered{" "}
                 <span className="text-gradient">Investment</span>
                 <br />

@@ -18,13 +18,13 @@ interface StockChartProps {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="chart-tooltip">
-        <p className="tooltip-date">{label}</p>
-        <p className="tooltip-price" style={{ color: payload[0].color }}>
-          Price: ${Number(payload[0].value).toFixed(2)}
+      <div className="bg-zinc-900/90 backdrop-blur-md border border-white/10 rounded-xl p-3 shadow-2xl">
+        <p className="text-zinc-400 text-xs font-medium mb-1 font-mono">{label}</p>
+        <p className="font-bold text-lg" style={{ color: payload[0].color }}>
+          ${Number(payload[0].value).toFixed(2)}
         </p>
         {payload[1] && (
-          <p className="tooltip-price" style={{ color: payload[1].color, fontSize: '12px' }}>
+          <p className="text-xs mt-1 font-medium" style={{ color: payload[1].color }}>
             SMA20: ${Number(payload[1].value).toFixed(2)}
           </p>
         )}

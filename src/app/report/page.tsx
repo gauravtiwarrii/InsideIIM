@@ -846,14 +846,19 @@ function ReportPageContent() {
                 className="grid grid-cols-1 md:grid-cols-3 gap-6"
               >
                 {/* Verdict Card */}
-                <motion.div variants={itemVariants} initial="hidden" animate="show" className="md:col-span-1">
-                  <Card className="glass-strong h-full hover:border-white/10 transition-colors gradient-border">
-                    <CardContent className="p-8 flex flex-col items-center justify-center text-center h-full gap-4">
-                      <p className="text-zinc-400 font-medium uppercase tracking-widest text-xs">
+                <motion.div variants={itemVariants} initial="hidden" animate="show" className="md:col-span-1" whileHover={{ scale: 1.02, y: -4 }} transition={{ type: "spring", stiffness: 300 }}>
+                  <Card className="glass-strong h-full hover:border-white/10 transition-all duration-300 gradient-border shadow-2xl relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+                    <CardContent className="p-8 flex flex-col items-center justify-center text-center h-full gap-4 relative z-10">
+                      <p className="text-zinc-400 font-medium uppercase tracking-[0.2em] text-[11px]">
                         Verdict
                       </p>
-                      <div className={`text-5xl md:text-6xl font-extrabold ${verdictColor} ${verdictGlow} verdict-pulse`}>
-                        {id.recommendation}
+                      <div className="relative">
+                        {/* Pulse rings */}
+                        <div className={`absolute inset-0 rounded-full blur-2xl opacity-20 animate-pulse-glow ${verdictColor}`} />
+                        <div className={`text-5xl md:text-6xl font-display font-extrabold ${verdictColor} ${verdictGlow} verdict-pulse relative z-10`}>
+                          {id.recommendation}
+                        </div>
                       </div>
                       <div className="flex items-baseline gap-1.5">
                         <span className="text-3xl font-bold text-white">
@@ -886,8 +891,8 @@ function ReportPageContent() {
                 </motion.div>
 
                 {/* Thesis Card */}
-                <motion.div variants={itemVariants} initial="hidden" animate="show" className="md:col-span-2">
-                  <Card className="glass-strong h-full hover:border-white/10 transition-colors">
+                <motion.div variants={itemVariants} initial="hidden" animate="show" className="md:col-span-2" whileHover={{ scale: 1.01, y: -2 }} transition={{ type: "spring", stiffness: 300 }}>
+                  <Card className="glass-strong h-full hover:border-white/10 transition-all duration-300">
                     <CardHeader>
                       <CardTitle className="text-white text-xl flex items-center gap-2">
                         <Lightbulb className="w-5 h-5 text-amber-400" />
