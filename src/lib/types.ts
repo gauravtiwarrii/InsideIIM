@@ -47,6 +47,6 @@ export interface AgentState {
 
 export interface StreamEvent {
   type: "step" | "research" | "market_data" | "analysis" | "swot" | "decision" | "error" | "complete";
-  data: any;
+  data: unknown;
   message: string;
 }

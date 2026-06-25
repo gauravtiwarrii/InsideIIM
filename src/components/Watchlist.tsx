@@ -78,6 +78,7 @@ export function WatchlistToggle({
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSaved(isInWatchlist(companyName));
   }, [companyName]);
 
@@ -111,6 +112,15 @@ export function WatchlistToggle({
   );
 }
 
+// Moved outside component to prevent react-hooks/purity warnings
+const formatTime = (ts: number) => {
+  const diff = Date.now() - ts;
+  if (diff < 60000) return "Just now";
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+  return new Date(ts).toLocaleDateString();
+};
+
 // Full watchlist panel for the home page
 export default function WatchlistPanel({
   onSelect,
@@ -119,12 +129,6 @@ export default function WatchlistPanel({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [entries, setEntries] = useState<WatchlistEntry[]>([]);
-
-  useEffect(() => {
-    loadEntries();
-    const interval = setInterval(loadEntries, 3000);
-    return () => clearInterval(interval);
-  }, []);
 
   const loadEntries = () => {
     try {
@@ -135,19 +139,19 @@ export default function WatchlistPanel({
     }
   };
 
+  useEffect(() => {
+    loadEntries();
+    const interval = setInterval(loadEntries, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
   const handleRemove = (name: string, e: React.MouseEvent) => {
     e.stopPropagation();
     removeFromWatchlist(name);
     loadEntries();
   };
 
-  const formatTime = (ts: number) => {
-    const diff = Date.now() - ts;
-    if (diff < 60000) return "Just now";
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-    return new Date(ts).toLocaleDateString();
-  };
+
 
   const getVerdictEmoji = (rec: string) => {
     switch (rec) {

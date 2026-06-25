@@ -10,8 +10,8 @@ export async function riskAgent(state: GraphState): Promise<Partial<GraphState>>
     const results = await searchTavily(`${state.companyName} competition risk regulatory issues debt market risk business model vulnerabilities`);
     const llm = createLLM();
 
-    const searchResultsText = results.map((r: any, i: number) => `[${i + 1}] ${r.title}\n${r.content}\nURL: ${r.url}`).join("\n\n");
-    const citations = results.map((r: any) => r.url);
+    const searchResultsText = results.map((r: { title: string; content: string; url: string }, i: number) => `[${i + 1}] ${r.title}\n${r.content}\nURL: ${r.url}`).join("\n\n");
+    const citations = results.map((r: { url: string }) => r.url);
 
     const prompt = RISK_PROMPT.replace("{companyName}", state.companyName)
       .replace("{searchResults}", searchResultsText);

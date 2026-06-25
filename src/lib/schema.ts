@@ -101,7 +101,7 @@ export interface GraphState {
   reviewComments: string | null;
   revisionCount: number;
   
-  reportData: any | null;
+  reportData: Record<string, unknown> | null;
   error: string | null;
   currentStep: string;
 }

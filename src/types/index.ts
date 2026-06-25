@@ -2,6 +2,6 @@ export * from "../lib/schema";
 
 export interface StreamEvent {
   type: string;
-  data: any;
+  data: unknown;
   message: string;
 }
