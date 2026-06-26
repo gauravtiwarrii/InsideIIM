@@ -4,6 +4,8 @@ import { researchAgent } from "../agents/research-agent";
 import { financialAgent } from "../agents/financial-agent";
 import { newsAgent } from "../agents/news-agent";
 import { riskAgent } from "../agents/risk-agent";
+import { technicalAgent } from "../agents/technical-agent";
+import { sentimentAgent } from "../agents/sentiment-agent";
 import { investmentAgent } from "../agents/investment-agent";
 import { reviewerAgent } from "../agents/reviewer-agent";
 
@@ -18,27 +20,35 @@ const graphStateChannels = {
     default: () => null,
   },
   chartData: {
-    value: (x: any, y: any) => y ?? x,
+    value: (x: GraphState["chartData"], y: GraphState["chartData"]) => y ?? x,
     default: () => null,
   },
   researchData: {
-    value: (x: any, y: any) => y ?? x,
+    value: (x: GraphState["researchData"], y: GraphState["researchData"]) => y ?? x,
     default: () => null,
   },
   financialData: {
-    value: (x: any, y: any) => y ?? x,
+    value: (x: GraphState["financialData"], y: GraphState["financialData"]) => y ?? x,
     default: () => null,
   },
   newsData: {
-    value: (x: any, y: any) => y ?? x,
+    value: (x: GraphState["newsData"], y: GraphState["newsData"]) => y ?? x,
     default: () => null,
   },
   riskData: {
-    value: (x: any, y: any) => y ?? x,
+    value: (x: GraphState["riskData"], y: GraphState["riskData"]) => y ?? x,
+    default: () => null,
+  },
+  technicalData: {
+    value: (x: GraphState["technicalData"], y: GraphState["technicalData"]) => y ?? x,
+    default: () => null,
+  },
+  sentimentData: {
+    value: (x: GraphState["sentimentData"], y: GraphState["sentimentData"]) => y ?? x,
     default: () => null,
   },
   investmentData: {
-    value: (x: any, y: any) => y ?? x,
+    value: (x: GraphState["investmentData"], y: GraphState["investmentData"]) => y ?? x,
     default: () => null,
   },
   reviewComments: {
@@ -47,10 +57,10 @@ const graphStateChannels = {
   },
   revisionCount: {
     value: (x: number, y: number) => y ?? x,
-    default: () => null,
+    default: () => 0,
   },
   reportData: {
-    value: (x: any, y: any) => y ?? x,
+    value: (x: GraphState["reportData"], y: GraphState["reportData"]) => y ?? x,
     default: () => null,
   },
   error: {
@@ -72,20 +82,27 @@ function routeAfterReview(state: GraphState) {
   return "report"; // Proceed to report generation
 }
 
-// Parallel analysis node: runs financial, news, and risk concurrently
+// Helper to delay execution
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+
+// Parallel analysis node: runs financial, news, risk, technical, and sentiment concurrently with a slight stagger
 async function parallelAnalysis(state: GraphState): Promise<Partial<GraphState>> {
   if (state.error) return {};
 
-  const [financialResult, newsResult, riskResult] = await Promise.all([
+  const [financialResult, newsResult, riskResult, technicalResult, sentimentResult] = await Promise.all([
     financialAgent(state),
-    newsAgent(state),
-    riskAgent(state),
+    delay(3000).then(() => newsAgent(state)),
+    delay(6000).then(() => riskAgent(state)),
+    delay(9000).then(() => technicalAgent(state)),
+    delay(12000).then(() => sentimentAgent(state))
   ]);
 
   return {
     ...financialResult,
     ...newsResult,
     ...riskResult,
+    ...technicalResult,
+    ...sentimentResult,
     currentStep: "parallel_complete",
   };
 }
@@ -106,6 +123,8 @@ const builder = new StateGraph<GraphState>({ channels: graphStateChannels })
         financialData: state.financialData,
         newsData: state.newsData,
         riskData: state.riskData,
+        technicalData: state.technicalData,
+        sentimentData: state.sentimentData,
         investmentData: state.investmentData,
       },
       currentStep: "complete"

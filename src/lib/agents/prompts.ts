@@ -14,9 +14,12 @@ Output ONLY valid JSON in this format:
 }}`;
 
 export const FINANCIAL_PROMPT = `You are a financial analyst.
-Analyze "{companyName}" using the provided search results. Calculate a Financial Health Score (0-100).
+Analyze "{companyName}" using the provided exact financial data and search results. Calculate a Financial Health Score (0-100).
 
-Search Results:
+Exact Financial Data (Prioritize these numbers over search results!):
+{exactFinancialData}
+
+Search Results (For context and text details):
 {searchResults}
 
 Output ONLY valid JSON in this format:
@@ -64,12 +67,14 @@ Output ONLY valid JSON in this format:
 }}`;
 
 export const INVESTMENT_PROMPT = `You are a senior investment advisor at a top-tier hedge fund.
-Combine the research, financial, news, and risk data for "{companyName}" to make a final recommendation.
+Combine the research, financial, news, risk, technical, and sentiment data for "{companyName}" to make a final recommendation.
 
 Research: {researchData}
 Financial: {financialData}
 News: {newsData}
 Risk: {riskData}
+Technical: {technicalData}
+Sentiment: {sentimentData}
 
 Calculate an overall Investment Score (0-100).
 Calculate a Confidence Score (0-100).
@@ -102,4 +107,35 @@ If public, provide the symbol (e.g., "AAPL"). If private or unknown, return null
 Output ONLY valid JSON in this format:
 {{
   "ticker": "TICKER_SYMBOL" or null
+}}`;
+
+export const TECHNICAL_PROMPT = `You are a technical analyst.
+Analyze the price trends and moving averages for "{companyName}" based on this chart data:
+{chartData}
+
+Identify key support/resistance levels, trend directions, and momentum.
+Calculate a Technical Score (0-100).
+
+Output ONLY valid JSON in this format:
+{{
+  "trend": "Bullish", "Bearish", or "Neutral",
+  "supportLevel": "Price level or description",
+  "resistanceLevel": "Price level or description",
+  "momentum": "Description of momentum indicators (e.g., MACD/RSI estimates)",
+  "technicalScore": <number>
+}}`;
+
+export const SENTIMENT_PROMPT = `You are a market sentiment analyst.
+Evaluate the broader public and institutional sentiment towards "{companyName}" based on these search results:
+{searchResults}
+
+Score the sentiment from 0 (Extremely Negative) to 100 (Extremely Positive).
+
+Output ONLY valid JSON in this format:
+{{
+  "overallSentiment": "Bullish", "Bearish", or "Neutral",
+  "institutionalSentiment": "Description of institutional view",
+  "retailSentiment": "Description of retail view",
+  "keySentimentDrivers": ["driver1", "driver2", "driver3"],
+  "sentimentScore": <number>
 }}`;

@@ -3,13 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 
 interface LoadingOrbProps {
-  currentStep: string;
   steps: { message: string; done: boolean }[];
 }
 
-export default function LoadingOrb({ currentStep, steps }: LoadingOrbProps) {
+export default function LoadingOrb({ steps }: LoadingOrbProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [pulse, setPulse] = useState(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;

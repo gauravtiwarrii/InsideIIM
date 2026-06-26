@@ -81,7 +81,9 @@ function SkeletonSection({ lines = 3 }: { lines?: number }) {
   );
 }
 
-export default function ReportPage() {
+import { createClient } from '@/utils/supabase/client'
+
+export default function ReportPage({ params }: { params: Promise<{ id: string }> }) {
   return (
     <Suspense
       fallback={
@@ -90,158 +92,64 @@ export default function ReportPage() {
         </div>
       }
     >
-      <ReportPageContent />
+      <ReportPageContent params={params} />
     </Suspense>
   );
 }
 
-function ReportPageContent() {
-  const searchParams = useSearchParams();
+function ReportPageContent({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const company = searchParams.get("company");
-
+  
   const [loading, setLoading] = useState(true);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [loadingMessages, setLoadingMessages] = useState<string[]>([
-    "Initializing LangGraph orchestration...",
-  ]);
-
-  // Progressive data — each section arrives independently
+  const [currentStepIndex, setCurrentStepIndex] = useState(STEPS.length);
+  const [loadingMessages, setLoadingMessages] = useState<string[]>([]);
+  
   const [researchData, setResearchData] = useState<any>(null);
   const [financialData, setFinancialData] = useState<any>(null);
   const [newsData, setNewsData] = useState<any>(null);
   const [riskData, setRiskData] = useState<any>(null);
   const [investmentData, setInvestmentData] = useState<any>(null);
+  const [technicalData, setTechnicalData] = useState<any>(null);
+  const [sentimentData, setSentimentData] = useState<any>(null);
   const [chartData, setChartData] = useState<any>(null);
   const [tickerSymbol, setTickerSymbol] = useState<string | null>(null);
+  const [company, setCompany] = useState<string>("");
 
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const reportRef = useRef<HTMLDivElement>(null);
-  const startTimeRef = useRef<number>(Date.now());
-
+  const supabase = createClient();
   const { toast, showToast, hideToast } = useToast();
 
-  // Elapsed time counter
   useEffect(() => {
-    if (!loading) return;
-    startTimeRef.current = Date.now();
-    const interval = setInterval(() => {
-      setElapsedTime(Math.floor((Date.now() - startTimeRef.current) / 1000));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [loading]);
-
-  useEffect(() => {
-    if (!company) return;
-
-    let isSubscribed = true;
-    let index = 0;
-
-    const runAnalysis = async () => {
+    async function loadReport() {
       try {
-        const response = await fetch("/api/research", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ companyName: company }),
-        });
-
-        if (!response.ok) throw new Error("Analysis failed to start.");
-
-        const reader = response.body?.getReader();
-        const decoder = new TextDecoder();
-
-        if (!reader) throw new Error("No response body.");
-
-        let buffer = "";
-
-        while (isSubscribed) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-
-          const messages = buffer.split("\n\n");
-          buffer = messages.pop() || "";
-
-          for (const message of messages) {
-            const lines = message.split("\n");
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                const dataStr = line.slice(6);
-                try {
-                  const event = JSON.parse(dataStr);
-
-                  if (event.type === "step") {
-                    setLoadingMessages((prev) => [...prev, event.message]);
-                    if (event.message === "Review failed. Requesting revision...") {
-                      index = 4;
-                      setCurrentStepIndex(index);
-                    } else if (
-                      index < STEPS.length - 1 &&
-                      STEPS.map((s) => s.label).includes(event.message)
-                    ) {
-                      index++;
-                      setCurrentStepIndex(index);
-                    } else if (event.message === "Critiquing recommendation...") {
-                      setCurrentStepIndex(5);
-                    }
-                  } else if (event.type === "research" && event.data) {
-                    setResearchData(event.data);
-                  } else if (event.type === "financial" && event.data) {
-                    setFinancialData(event.data);
-                  } else if (event.type === "news" && event.data) {
-                    setNewsData(event.data);
-                  } else if (event.type === "risk" && event.data) {
-                    setRiskData(event.data);
-                  } else if (event.type === "investment" && event.data) {
-                    setInvestmentData(event.data);
-                  } else if (event.type === "error") {
-                    setError(event.message);
-                    setLoading(false);
-                    isSubscribed = false;
-                  } else if (event.type === "complete") {
-                    setResult(event.data);
-                    // Set any remaining data from the complete event
-                    if (event.data.researchData) setResearchData(event.data.researchData);
-                    if (event.data.financialData) setFinancialData(event.data.financialData);
-                    if (event.data.newsData) setNewsData(event.data.newsData);
-                    if (event.data.riskData) setRiskData(event.data.riskData);
-                    if (event.data.investmentData) setInvestmentData(event.data.investmentData);
-                    if (event.data.chartData) setChartData(event.data.chartData);
-                    if (event.data.tickerSymbol) setTickerSymbol(event.data.tickerSymbol);
-                    setCurrentStepIndex(STEPS.length);
-                    setLoading(false);
-                    isSubscribed = false;
-
-                    // Auto-save to watchlist
-                    if (event.data.investmentData) {
-                      addToWatchlist(
-                        company,
-                        event.data.investmentData.recommendation,
-                        event.data.investmentData.investmentScore
-                      );
-                    }
-                  }
-                } catch {
-                  // Ignore parse errors
-                }
-              }
-            }
-          }
-        }
+        const { id } = await params;
+        const { data, error } = await supabase.from('reports').select('*').eq('id', id).single();
+        if (error) throw error;
+        
+        const reportData = data.report_data;
+        setResult(reportData);
+        setCompany(data.company_name);
+        setResearchData(reportData.researchData);
+        setFinancialData(reportData.financialData);
+        setNewsData(reportData.newsData);
+        setRiskData(reportData.riskData);
+        setTechnicalData(reportData.technicalData);
+        setSentimentData(reportData.sentimentData);
+        setInvestmentData(reportData.investmentData);
+        setChartData(reportData.chartData);
+        setTickerSymbol(reportData.tickerSymbol);
+        
       } catch (err: any) {
-        if (isSubscribed) {
-          setError(err.message || "An unexpected error occurred.");
-          setLoading(false);
-        }
+        setError("Failed to load report: " + err.message);
+      } finally {
+        setLoading(false);
       }
-    };
-
-    runAnalysis();
-    return () => { isSubscribed = false; };
-  }, [company]);
+    }
+    loadReport();
+  }, [params]);
 
   const exportPDF = async () => {
     const html2pdf = (await import("html2pdf.js")).default;
@@ -491,13 +399,9 @@ function ReportPageContent() {
   };
 
   const copyLink = useCallback(() => {
-    let urlToCopy = window.location.href;
-    if (result && result.dbId) {
-      urlToCopy = `${window.location.origin}/report/${result.dbId}`;
-    }
-    navigator.clipboard.writeText(urlToCopy);
+    navigator.clipboard.writeText(window.location.href);
     showToast("Report link copied to clipboard!", "copy");
-  }, [showToast, result]);
+  }, [showToast]);
 
   const formatElapsed = (s: number) => {
     const mins = Math.floor(s / 60);
@@ -620,24 +524,6 @@ function ReportPageContent() {
             <span className="text-zinc-600 font-mono tabular-nums">
               {formatElapsed(elapsedTime)}
             </span>
-          </div>
-
-          <div className="mt-8 pt-6 border-t border-white/5">
-            <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-3 text-center">While you wait</div>
-            <motion.div
-              key={Math.floor(elapsedTime / 5) % 4}
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -5 }}
-              className="text-center text-sm text-zinc-400 italic"
-            >
-              {[
-                "Did you know? The term 'Bear Market' comes from how bears swipe their paws down when attacking.",
-                "Did you know? The New York Stock Exchange began in 1792 under a Buttonwood tree.",
-                "Did you know? The most expensive stock ever is Berkshire Hathaway Class A, trading over $600,000 per share.",
-                "Did you know? 'Blue chip' stocks get their name from poker, where blue chips are traditionally the highest value."
-              ][Math.floor(elapsedTime / 5) % 4]}
-            </motion.div>
           </div>
         </div>
       </div>
@@ -845,19 +731,14 @@ function ReportPageContent() {
                 className="grid grid-cols-1 md:grid-cols-3 gap-6"
               >
                 {/* Verdict Card */}
-                <motion.div variants={itemVariants} initial="hidden" animate="show" className="md:col-span-1" whileHover={{ scale: 1.02, y: -4 }} transition={{ type: "spring", stiffness: 300 }}>
-                  <Card className="glass-strong h-full hover:border-white/10 transition-all duration-300 gradient-border shadow-2xl relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
-                    <CardContent className="p-8 flex flex-col items-center justify-center text-center h-full gap-4 relative z-10">
-                      <p className="text-zinc-400 font-medium uppercase tracking-[0.2em] text-[11px]">
+                <motion.div variants={itemVariants} initial="hidden" animate="show" className="md:col-span-1">
+                  <Card className="glass-strong h-full hover:border-white/10 transition-colors gradient-border">
+                    <CardContent className="p-8 flex flex-col items-center justify-center text-center h-full gap-4">
+                      <p className="text-zinc-400 font-medium uppercase tracking-widest text-xs">
                         Verdict
                       </p>
-                      <div className="relative">
-                        {/* Pulse rings */}
-                        <div className={`absolute inset-0 rounded-full blur-2xl opacity-20 animate-pulse-glow ${verdictColor}`} />
-                        <div className={`text-5xl md:text-6xl font-display font-extrabold ${verdictColor} ${verdictGlow} verdict-pulse relative z-10`}>
-                          {id.recommendation}
-                        </div>
+                      <div className={`text-5xl md:text-6xl font-extrabold ${verdictColor} ${verdictGlow} verdict-pulse`}>
+                        {id.recommendation}
                       </div>
                       <div className="mt-2">
                         <ConfidenceGauge
@@ -884,8 +765,8 @@ function ReportPageContent() {
                 </motion.div>
 
                 {/* Thesis Card */}
-                <motion.div variants={itemVariants} initial="hidden" animate="show" className="md:col-span-2" whileHover={{ scale: 1.01, y: -2 }} transition={{ type: "spring", stiffness: 300 }}>
-                  <Card className="glass-strong h-full hover:border-white/10 transition-all duration-300">
+                <motion.div variants={itemVariants} initial="hidden" animate="show" className="md:col-span-2">
+                  <Card className="glass-strong h-full hover:border-white/10 transition-colors">
                     <CardHeader>
                       <CardTitle className="text-white text-xl flex items-center gap-2">
                         <Lightbulb className="w-5 h-5 text-amber-400" />

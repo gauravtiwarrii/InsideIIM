@@ -9,6 +9,8 @@ export function createLLM() {
     },
     temperature: 0.3,
     maxTokens: 4096,
+    maxRetries: 1,
+    timeout: 25000,
     modelKwargs: {
       response_format: { type: "json_object" }
     }

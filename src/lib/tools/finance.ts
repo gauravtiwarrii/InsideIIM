@@ -24,3 +24,26 @@ export async function getHistoricalData(ticker: string, months: number = 6) {
     return null;
   }
 }
+
+export async function getFinancialMetrics(ticker: string) {
+  try {
+    const quote = await yahooFinance.quote(ticker);
+    const summary = await yahooFinance.quoteSummary(ticker, { 
+      modules: ["financialData", "defaultKeyStatistics", "summaryDetail"] 
+    });
+
+    return {
+      price: quote.regularMarketPrice,
+      marketCap: quote.marketCap,
+      peRatio: quote.trailingPE || quote.forwardPE,
+      eps: quote.epsTrailingTwelveMonths || quote.epsForward,
+      revenue: summary.financialData?.totalRevenue,
+      netIncome: summary.financialData?.netIncomeToCommon,
+      revenueGrowth: summary.financialData?.revenueGrowth,
+      debt: summary.financialData?.totalDebt,
+    };
+  } catch (error) {
+    console.error(`Yahoo Finance Metrics Error for ${ticker}:`, error);
+    return null;
+  }
+}

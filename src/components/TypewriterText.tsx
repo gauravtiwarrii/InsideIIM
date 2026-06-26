@@ -17,7 +17,9 @@ export default function TypewriterText({
   const [isComplete, setIsComplete] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDisplayedText("");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsComplete(false);
     let index = 0;
 

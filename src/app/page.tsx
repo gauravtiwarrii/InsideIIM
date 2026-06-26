@@ -157,6 +157,8 @@ export default function Home() {
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
 
+  const [filteredSuggestions, setFilteredSuggestions] = useState<any[]>([]);
+
   const typedWord = useTypewriter(
     ["Nvidia", "Tesla", "Reliance", "Apple", "Google", "Infosys"],
     120,
@@ -164,11 +166,26 @@ export default function Home() {
     1800
   );
 
-  const filteredSuggestions = company.trim().length > 0
-    ? COMPANY_DATABASE.filter((c) =>
-        c.toLowerCase().includes(company.toLowerCase())
-      ).slice(0, 8)
-    : [];
+  useEffect(() => {
+    if (!company.trim()) {
+      setFilteredSuggestions([]);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search-stocks?q=${encodeURIComponent(company)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setFilteredSuggestions(data);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [company]);
 
   useEffect(() => {
     const stored = localStorage.getItem("investiq_history");
@@ -235,15 +252,17 @@ export default function Home() {
     } else if (e.key === "Enter" && highlightedIndex >= 0) {
       e.preventDefault();
       const selected = filteredSuggestions[highlightedIndex];
-      setCompany(selected);
+      const name = typeof selected === 'string' ? selected : selected.symbol ? `${selected.name} (${selected.symbol})` : selected.name;
+      setCompany(name);
       setShowSuggestions(false);
-      handleSearch(selected);
+      handleSearch(name);
     } else if (e.key === "Escape") {
       setShowSuggestions(false);
     }
   };
 
-  const selectSuggestion = (name: string) => {
+  const selectSuggestion = (suggestion: any) => {
+    const name = typeof suggestion === 'string' ? suggestion : suggestion.symbol ? `${suggestion.name} (${suggestion.symbol})` : suggestion.name;
     setCompany(name);
     setShowSuggestions(false);
     handleSearch(name);
@@ -257,7 +276,8 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-emerald-500/30 relative overflow-hidden">
+    <div className="min-h-screen bg-black text-white selection:bg-emerald-500/30 relative overflow-hidden font-sans">
+      <div className="absolute inset-0 bg-noise z-0" />
       {/* Watchlist */}
       <WatchlistPanel onSelect={(name) => handleSearch(name)} />
 
@@ -265,9 +285,9 @@ export default function Home() {
       <ParticleBackground />
 
       {/* Ambient Gradients */}
-      <div className="fixed top-[-20%] left-[-15%] w-[50%] h-[50%] bg-emerald-500/8 rounded-full blur-[180px] pointer-events-none" />
-      <div className="fixed bottom-[-20%] right-[-15%] w-[50%] h-[50%] bg-blue-500/8 rounded-full blur-[180px] pointer-events-none" />
-      <div className="fixed top-[30%] right-[10%] w-[25%] h-[25%] bg-purple-500/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="fixed top-[-20%] left-[-15%] w-[50%] h-[50%] bg-emerald-500/10 rounded-full blur-[180px] pointer-events-none animate-blob" />
+      <div className="fixed bottom-[-20%] right-[-15%] w-[50%] h-[50%] bg-blue-500/10 rounded-full blur-[180px] pointer-events-none animate-blob" style={{ animationDelay: "2s" }} />
+      <div className="fixed top-[30%] right-[10%] w-[25%] h-[25%] bg-purple-500/10 rounded-full blur-[140px] pointer-events-none animate-blob" style={{ animationDelay: "4s" }} />
 
       {/* ─── Hero Section ─── */}
       <section className="min-h-screen flex flex-col items-center justify-center px-6 relative z-10">
@@ -299,7 +319,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
-              <h1 className="text-5xl md:text-6xl font-extrabold mb-5 tracking-tight leading-[1.1]">
+              <h1 className="text-5xl md:text-6xl font-display font-extrabold mb-5 tracking-tight leading-[1.1]">
                 AI-Powered{" "}
                 <span className="text-gradient">Investment</span>
                 <br />
@@ -418,16 +438,29 @@ export default function Home() {
                       </span>
                     </div>
                     <div className="py-1 max-h-[320px] overflow-y-auto">
-                      {filteredSuggestions.map((name, idx) => {
-                        const matchIndex = name.toLowerCase().indexOf(company.toLowerCase());
-                        const beforeMatch = name.slice(0, matchIndex);
-                        const matchText = name.slice(matchIndex, matchIndex + company.length);
-                        const afterMatch = name.slice(matchIndex + company.length);
+                      {filteredSuggestions.map((suggestion, idx) => {
+                        const name = suggestion.name || suggestion;
+                        const symbol = suggestion.symbol ? `(${suggestion.symbol})` : "";
+                        const exchange = suggestion.exchange ? ` - ${suggestion.exchange}` : "";
+                        
+                        const displayString = `${name} ${symbol}`;
+                        const matchIndex = displayString.toLowerCase().indexOf(company.toLowerCase());
+                        
+                        let beforeMatch = displayString;
+                        let matchText = "";
+                        let afterMatch = "";
+
+                        if (matchIndex !== -1) {
+                          beforeMatch = displayString.slice(0, matchIndex);
+                          matchText = displayString.slice(matchIndex, matchIndex + company.length);
+                          afterMatch = displayString.slice(matchIndex + company.length);
+                        }
+
                         return (
                           <button
-                            key={name}
+                            key={suggestion.symbol || name}
                             type="button"
-                            className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all duration-150 ${
+                            className={`w-full flex items-center justify-between px-4 py-2.5 text-left transition-all duration-150 ${
                               highlightedIndex === idx
                                 ? "bg-emerald-500/10 text-white"
                                 : "text-zinc-300 hover:bg-white/5 hover:text-white"
@@ -435,21 +468,23 @@ export default function Home() {
                             onMouseEnter={() => setHighlightedIndex(idx)}
                             onMouseDown={(e) => {
                               e.preventDefault();
-                              selectSuggestion(name);
+                              selectSuggestion(suggestion);
                             }}
                           >
-                            <Building2 className={`w-4 h-4 flex-shrink-0 ${
-                              highlightedIndex === idx ? "text-emerald-400" : "text-zinc-500"
-                            }`} />
-                            <span className="text-sm font-medium truncate">
-                              {beforeMatch}
-                              <span className="text-emerald-400 font-semibold">{matchText}</span>
-                              {afterMatch}
-                            </span>
-                            {highlightedIndex === idx && (
-                              <kbd className="ml-auto text-[10px] text-zinc-500 border border-zinc-700 rounded px-1 py-0.5 font-mono">
-                                ⏎
-                              </kbd>
+                            <div className="flex items-center gap-3 truncate">
+                              <Building2 className={`w-4 h-4 flex-shrink-0 ${
+                                highlightedIndex === idx ? "text-emerald-400" : "text-zinc-500"
+                              }`} />
+                              <span className="text-sm font-medium truncate">
+                                {beforeMatch}
+                                <span className="text-emerald-400 font-semibold">{matchText}</span>
+                                {afterMatch}
+                              </span>
+                            </div>
+                            {suggestion.exchange && (
+                              <span className="text-[10px] text-zinc-500 font-mono ml-3 border border-zinc-700/50 rounded px-1.5 py-0.5 bg-zinc-800/30 whitespace-nowrap">
+                                {suggestion.exchange}
+                              </span>
                             )}
                           </button>
                         );
@@ -623,6 +658,37 @@ export default function Home() {
                 </span>
                 <h3 className="text-lg font-bold text-white mb-2">{item.title}</h3>
                 <p className="text-sm text-zinc-500 leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Fun Facts Section ─── */}
+      <section className="relative z-10 px-6 py-24 bg-zinc-900/20 border-y border-white/5">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-extrabold mb-4">Did You Know?</h2>
+            <p className="text-zinc-400">Fascinating insights from the world of finance</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[
+              { emoji: "🍏", text: "Apple was the first U.S. company to hit a $1 Trillion, $2 Trillion, and $3 Trillion market cap." },
+              { emoji: "🍕", text: "The first real-world Bitcoin transaction was 10,000 BTC for two Papa John's pizzas in 2010. Those pizzas would be worth hundreds of millions today!" },
+              { emoji: "👴", text: "Warren Buffett made 99% of his immense wealth after his 50th birthday, proving the sheer power of compound interest over time." },
+              { emoji: "📜", text: "The Dutch East India Company is considered the first multinational corporation and the first to issue stock to the public in 1602." }
+            ].map((fact, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="p-6 rounded-2xl glass-strong border border-white/5 flex gap-4 items-start hover:border-white/10 transition-colors"
+              >
+                <div className="text-3xl">{fact.emoji}</div>
+                <p className="text-sm text-zinc-300 leading-relaxed">{fact.text}</p>
               </motion.div>
             ))}
           </div>

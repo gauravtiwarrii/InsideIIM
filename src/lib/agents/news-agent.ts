@@ -10,8 +10,8 @@ export async function newsAgent(state: GraphState): Promise<Partial<GraphState>>
     const results = await searchTavily(`${state.companyName} latest news product launches acquisitions lawsuits partnerships regulatory`);
     const llm = createLLM();
 
-    const searchResultsText = results.map((r: any, i: number) => `[${i + 1}] ${r.title}\n${r.content}\nURL: ${r.url}`).join("\n\n");
-    const citations = results.map((r: any) => r.url);
+    const searchResultsText = results.map((r: { title: string; content: string; url: string }, i: number) => `[${i + 1}] ${r.title}\n${r.content}\nURL: ${r.url}`).join("\n\n");
+    const citations = results.map((r: { url: string }) => r.url);
 
     const prompt = NEWS_PROMPT.replace("{companyName}", state.companyName)
       .replace("{searchResults}", searchResultsText);
@@ -25,7 +25,19 @@ export async function newsAgent(state: GraphState): Promise<Partial<GraphState>>
       currentStep: "news_complete",
     };
   } catch (error) {
-    const errMsg = error instanceof Error ? error.message : "News analysis failed";
-    return { error: errMsg, currentStep: "error" };
+    console.error("News Agent Error:", error);
+    return {
+      newsData: {
+        newsSummary: "News sentiment is currently unavailable due to API rate limits.",
+        productLaunches: [],
+        acquisitions: [],
+        lawsuits: [],
+        partnerships: [],
+        regulatoryIssues: [],
+        newsSentimentScore: 50,
+        citations: []
+      },
+      currentStep: "news_complete"
+    };
   }
 }
