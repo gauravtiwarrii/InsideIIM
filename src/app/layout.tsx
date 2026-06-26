@@ -48,6 +48,7 @@ export const metadata: Metadata = {
 };
 
 import RecruiterMode from "@/components/RecruiterMode";
+import { Analytics } from '@vercel/analytics/next';
 
 export default function RootLayout({
   children,
@@ -59,6 +60,7 @@ export default function RootLayout({
       <body className="font-sans antialiased bg-black text-foreground min-h-screen flex flex-col">
         {children}
         <RecruiterMode />
+        <Analytics />
       </body>
     </html>
   );
